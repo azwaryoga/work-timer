@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" type="image/x-icon" href="image/log-96.png">
+  <title>Work Log</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Work Log</h1>
+    <label for="startDate">Start date:</label>
+    <input type="date" id="startDate">
+    <label for="endDate" style="margin-left:10px;">End date:</label>
+    <input type="date" id="endDate">
+    <button id="applyFilterBtn">Apply Filter</button>
+    <button id="clearFilterBtn">Clear Filter</button>
+    <br><br>
+    <label for="singleDate">Show only this day:</label>
+    <input type="date" id="singleDate">
+    <button id="singleDayBtn">Show</button>
+    <!-- Modern Table for Log List -->
+    <table id="logTable" class="log-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Session</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Log rows will be inserted here -->
+      </tbody>
+    </table>
+    <button onclick="window.location.href='index.html'">Back</button>
+    <button id="closeBtn">Close</button>
+    <button id="clearLogBtn">Clear Log</button>
+    <button id="downloadCsvBtn">Download CSV</button>
+  </div>
+  <script src="log.js"></script>
+</body>
+</html>

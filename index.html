@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" type="image/x-icon" href="image/index-96.png">
+  <title>Work Session Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Add Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+
+  <div id="today-summary" class="summary-container">
+
+    <div class="container">
+      <!-- <h1>Work Session Tracker</h1> -->
+      <div class="timer">
+        <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+      </div>
+      <div class="buttons">
+        <button id="startBtn">Start</button>
+        <button id="stopBtn">Stop</button>
+        <button id="logBtn" onclick="window.open('log.html', '_blank')">Log</button>
+      </div>
+      <!-- Remove or keep the log section below as you wish, but to hide it: -->
+      <div class="log" style="display: none;">
+        <h2>Work Log</h2>
+        <ul id="logList"></ul>
+      </div>
+    </div>
+
+    <h3>Today's Total Work Time</h3>
+    <div id="today-total">00:00:00</div>
+
+    <!-- Weekly Chart Section -->
+    <div class="weekly-chart-container">
+      <!-- <h2>This Week's Work Hours</h2> -->
+      <canvas id="weeklyChart" width="400" height="200"></canvas>
+    </div>
+
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
