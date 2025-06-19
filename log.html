@@ -1,45 +1,531 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-200.png" type="image/x-icon">
+    <title>Work Log</title>
+    <!-- Add Material Icons font -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #ddd;
+            margin: 0;
+            padding: 20px;
+            padding-top: 0;   /* Remove extra space at the top */
+        }
 
-  <link rel="icon" type="image/x-icon" href="log-96.png">
-  <title>Work Log</title>
-  <link rel="stylesheet" href="styles.css">
+        .container-box {
+            background: #333;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.08);
+            padding: 32px 40px;
+            max-width: 40vw;
+            margin: 0 auto;
+            /* Adjust padding-top to match filter-area height */
+            padding-top: 80px;
+        }
+
+        table {
+            margin: 0 auto;
+            width: auto;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #444;
+            padding: 8px 20px; /* Increased padding for more space */
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: #db671a;
+        }
+
+        tr:nth-child(even) {
+            background-color: #222;
+        }
+
+        .back-button {
+            margin: 20px 0;
+            width: auto;
+            padding: 4px 20px;
+            background-color: #43a047;
+            color: #ffffff;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-button:hover {
+            background-color: #2e7d32;
+        }
+
+        /* Example CSS */
+        .center-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .back-btn,
+        .work-log-title {
+          margin: 0px 0;
+        }
+
+        .filter-area {
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center all children tightly */
+            border: none;
+            border-radius: 0;
+            background: #181818;
+            padding: 0 32px;
+            margin-bottom: 0;
+            width: 100vw;
+            box-sizing: border-box;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            height: 72px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            gap: 18px; /* Add horizontal gap between left, center, right */
+        }
+
+        .filter-left,
+        .filter-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 100%;
+        }
+
+        .filter-center {
+            display: flex;
+            /* flex: 1;  Remove this line */
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #232323;
+            border-radius: 8px;
+            padding: 8px 18px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.15s;
+            position: relative;
+            color: #db671a;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-btn:hover {
+            background: #232323;
+        }
+        .icon-btn .material-icons {
+            font-size: 28px;
+        }
+        .icon-btn .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            width: max-content;
+            background: #232323;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 4px 10px;
+            position: absolute;
+            z-index: 10;
+            bottom: -38px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+        .icon-btn:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Download and clear log icons */
+        .icon-btn.download { color: #1976d2; }
+        .icon-btn.clear { color: #b71c1c; }
+        .icon-btn.back { color: #43a047; }
+
+        /* Hide default button text */
+        .back-button {
+            display: none !important;
+        }
+
+        /* Responsive: stack filter-row on small screens */
+        @media (max-width: 700px) {
+            .filter-area {
+                flex-direction: column;
+                height: auto;
+                padding: 12px 4vw;
+                gap: 10px;
+            }
+            .filter-center {
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+
+        input[type="date"] {
+            background: #fff !important;
+            color: #222 !important;
+            border: 1px solid #bbb !important;
+            border-radius: 4px !important;
+            padding: 4px 8px !important;
+            font-size: 15px;
+        }
+        input[type="date"]::-webkit-input-placeholder { color: #888; }
+        input[type="date"]::-moz-placeholder { color: #888; }
+        input[type="date"]:-ms-input-placeholder { color: #888; }
+        input[type="date"]::placeholder { color: #888; }
+
+        /* Floating timer styles */
+        #floating-timer {
+            position: fixed;
+            left: 50%;
+            bottom: 32px;
+            transform: translateX(-50%);
+            background: #222;
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 32px;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            display: none;
+            z-index: 2000;
+            border: 2px solid #db671a;
+            text-align: center;
+        }
+        #floating-stop-btn {
+            margin-left: 24px;
+            background: #e53935;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Work Log</h1>
-    <label for="startDate">Start date:</label>
-    <input type="date" id="startDate">
-    <label for="endDate" style="margin-left:10px;">End date:</label>
-    <input type="date" id="endDate">
-    <button id="applyFilterBtn">Apply Filter</button>
-    <button id="clearFilterBtn">Clear Filter</button>
-    <br><br>
-    <label for="singleDate">Show only this day:</label>
-    <input type="date" id="singleDate">
-    <button id="singleDayBtn">Show</button>
-    <!-- Modern Table for Log List -->
-    <table id="logTable" class="log-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Start</th>
-          <th>End</th>
-          <th>Session</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Log rows will be inserted here -->
-      </tbody>
-    </table>
-    <button onclick="window.location.href='index.html'">Back</button>
-    <button id="closeBtn">Close</button>
-    <button id="clearLogBtn">Clear Log</button>
-    <button id="downloadCsvBtn">Download CSV</button>
-  </div>
-  <script src="log.js"></script>
+    <!-- Move filter-area OUTSIDE of container-box -->
+    <div class="filter-area">
+        <div class="filter-left">
+            <a href="index.html" class="icon-btn back">
+                <span class="material-icons">arrow_back</span>
+                <span class="tooltip">Back</span>
+            </a>
+        </div>
+        <div class="filter-center">
+            <div class="filter-row">
+                <label for="filter-start-date" style="margin-bottom:0; font-size:14px; color:#aaa;">Date:</label>
+                <input type="date" id="filter-start-date" style="background:#fff; color:#222; border:1px solid #bbb; border-radius:4px; padding:4px 8px;">
+                <span style="margin: 0 4px; color:#888;">to</span>
+                <input type="date" id="filter-end-date" style="background:#fff; color:#222; border:1px solid #bbb; border-radius:4px; padding:4px 8px;">
+                <button id="apply-range-btn" class="icon-btn" type="button">
+                    <span class="material-icons">filter_alt</span>
+                    <span class="tooltip">Apply Filter</span>
+                </button>
+                <button id="clear-range-btn" class="icon-btn" type="button">
+                    <span class="material-icons">close</span>
+                    <span class="tooltip">Clear Filter</span>
+                </button>
+            </div>
+        </div>
+        <div class="filter-right">
+            <button id="download-csv-btn" class="icon-btn download" type="button">
+                <span class="material-icons">download</span>
+                <span class="tooltip">Download CSV</span>
+            </button>
+            <button id="clear-log-btn" class="icon-btn clear" type="button">
+                <span class="material-icons">delete</span>
+                <span class="tooltip">Clear Log</span>
+            </button>
+        </div>
+    </div>
+    <div class="container-box">
+      <div class="center-container">
+          <table style="width: auto; border-collapse: collapse;">
+              <thead>
+                  <tr>
+                      <th>Date</th>
+                      <th>Start Time</th>
+                      <th>End Time</th>
+                      <th>Session Length</th>
+                      <th>Total for the Day</th>
+                  </tr>
+              </thead>
+              <tbody id="log-entries">
+                  <!-- Log entries will be dynamically populated here -->
+              </tbody>
+          </table>
+      </div>
+    </div>
+
+    <!-- Floating timer element -->
+    <div id="floating-timer" style="
+        position: fixed;
+        left: 50%;
+        bottom: 32px;
+        transform: translateX(-50%);
+        background: #222;
+        color: #fff;
+        padding: 16px 32px;
+        border-radius: 32px;
+        font-size: 2rem;
+        font-weight: bold;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+        display: none;
+        z-index: 2000;
+        border: 2px solid #db671a;
+        text-align: center;
+    ">
+        <span id="floating-timer-display">00:00:00</span>
+        <button id="floating-stop-btn" style="
+            margin-left: 24px;
+            background: #e53935;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+        ">Stop</button>
+    </div>
+
+    <script>
+        const logTableBody = document.getElementById('log-entries');
+        const filterStartDateInput = document.getElementById('filter-start-date');
+        const filterEndDateInput = document.getElementById('filter-end-date');
+        const applyRangeBtn = document.getElementById('apply-range-btn');
+        const clearRangeBtn = document.getElementById('clear-range-btn');
+        const downloadCsvBtn = document.getElementById('download-csv-btn'); // New
+
+        // Floating timer logic
+        const floatingTimer = document.getElementById('floating-timer');
+        const floatingTimerDisplay = document.getElementById('floating-timer-display');
+        const floatingStopBtn = document.getElementById('floating-stop-btn');
+        let floatingTimerInterval = null;
+
+        function formatTime(seconds) {
+            const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(seconds % 60).padStart(2, '0');
+            return `${hrs}:${mins}:${secs}`;
+        }
+
+        function showFloatingTimer(startTime) {
+            floatingTimer.style.display = 'block';
+            function update() {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                floatingTimerDisplay.textContent = formatTime(elapsed);
+            }
+            update();
+            floatingTimerInterval = setInterval(update, 1000);
+        }
+
+        function hideFloatingTimer() {
+            floatingTimer.style.display = 'none';
+            if (floatingTimerInterval) clearInterval(floatingTimerInterval);
+        }
+
+        function logSessionFromFloating(endTime) {
+            const workData = JSON.parse(localStorage.getItem('workData')) || { sessions: [] };
+            const activeTimer = JSON.parse(localStorage.getItem('activeTimer'));
+            if (!activeTimer || !activeTimer.startTime) return;
+            const start = activeTimer.startTime;
+            const end = endTime;
+            const sessionLength = Math.floor((end - start) / 1000);
+            const today = new Date(start).toISOString().split('T')[0];
+            workData.sessions.push({ date: today, start, end, length: sessionLength });
+            localStorage.setItem('workData', JSON.stringify(workData));
+            localStorage.removeItem('activeTimer');
+            loadLogData();
+        }
+
+        function checkAndShowFloatingTimer() {
+            const activeTimer = JSON.parse(localStorage.getItem('activeTimer'));
+            if (activeTimer && activeTimer.running && activeTimer.startTime) {
+                showFloatingTimer(activeTimer.startTime);
+            } else {
+                hideFloatingTimer();
+            }
+        }
+
+        // Download CSV functionality
+        downloadCsvBtn.addEventListener('click', function() {
+            const data = JSON.parse(localStorage.getItem('workData')) || { sessions: [] };
+            if (!data.sessions.length) {
+                alert('No log data to download.');
+                return;
+            }
+
+            // Calculate daily totals
+            const dailyTotals = {};
+            data.sessions.forEach(session => {
+                const date = session.date;
+                if (!dailyTotals[date]) dailyTotals[date] = 0;
+                dailyTotals[date] += session.length;
+            });
+
+            // Sort sessions by end time descending
+            const sessions = data.sessions.slice().sort((a, b) => new Date(b.end) - new Date(a.end));
+
+            // CSV header
+            let csv = 'Date,Start Time,End Time,Session Length,Total for the Day\n';
+
+            sessions.forEach(session => {
+                const date = session.date;
+                const start = new Date(session.start).toLocaleTimeString();
+                const end = new Date(session.end).toLocaleTimeString();
+                const sessionLength = formatTime(session.length);
+                const totalForDay = formatTime(dailyTotals[date]);
+                csv += `"${date}","${start}","${end}","${sessionLength}","${totalForDay}"\n`;
+            });
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'work_log.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Apply date range filter
+        applyRangeBtn.addEventListener('click', function() {
+            const startDate = filterStartDateInput.value;
+            const endDate = filterEndDateInput.value;
+            loadLogData(startDate || null, endDate || null);
+        });
+
+        // Clear date range filter
+        clearRangeBtn.addEventListener('click', function() {
+            filterStartDateInput.value = '';
+            filterEndDateInput.value = '';
+            loadLogData();
+        });
+
+        // Clear log button functionality
+        document.getElementById('clear-log-btn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all log entries?')) {
+                localStorage.removeItem('workData');
+                loadLogData();
+            }
+        });
+
+        // Stop button in floating timer
+        floatingStopBtn.addEventListener('click', () => {
+            if (floatingTimerInterval) clearInterval(floatingTimerInterval);
+            floatingTimerInterval = null;
+            floatingTimerDisplay.textContent = '00:00:00';
+            logSessionFromFloating(Date.now());
+            hideFloatingTimer();
+        });
+
+        function loadLogData(startDate = null, endDate = null) {
+            logTableBody.innerHTML = ''; // Clear previous rows
+            const data = JSON.parse(localStorage.getItem('workData')) || { sessions: [] };
+
+            // Calculate daily totals first
+            const dailyTotals = {};
+            data.sessions.forEach(session => {
+                const date = session.date;
+                if (!dailyTotals[date]) dailyTotals[date] = 0;
+                dailyTotals[date] += session.length;
+            });
+
+            // Sort sessions by end time descending (newest first)
+            let filteredSessions = data.sessions.slice().sort((a, b) => new Date(b.end) - new Date(a.end));
+
+            // Filter by date range if provided
+            if (startDate || endDate) {
+                filteredSessions = filteredSessions.filter(session => {
+                    const sessionDate = session.date;
+                    if (startDate && endDate) {
+                        return sessionDate >= startDate && sessionDate <= endDate;
+                    } else if (startDate) {
+                        return sessionDate >= startDate;
+                    } else if (endDate) {
+                        return sessionDate <= endDate;
+                    }
+                    return true;
+                });
+            }
+
+            filteredSessions.forEach(session => {
+                const date = session.date;
+                const sessionLength = session.length;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${new Date(session.start).toLocaleTimeString()}</td>
+                    <td>${new Date(session.end).toLocaleTimeString()}</td>
+                    <td>${formatTime(sessionLength)}</td>
+                    <td>${formatTime(dailyTotals[date])}</td>
+                `;
+                logTableBody.appendChild(row);
+            });
+        }
+
+        // On page load
+        checkAndShowFloatingTimer();
+
+        // Also, if user closes or reloads log.html, log the session
+        window.addEventListener('beforeunload', (e) => {
+            // Check if navigating to index.html
+            if (document.activeElement && document.activeElement.href && document.activeElement.href.endsWith('index.html')) {
+                // Do not log, just navigate
+                return;
+            }
+            // Otherwise, log the session
+            const activeTimer = JSON.parse(localStorage.getItem('activeTimer'));
+            if (activeTimer && activeTimer.running && activeTimer.startTime) {
+                logSessionFromFloating(Date.now());
+            }
+        });
+
+        loadLogData();
+
+        // Handle back button: just go back, don't log or clear timer
+        document.querySelector('.icon-btn.back').addEventListener('click', function(e) {
+            e.preventDefault();
+            // Do NOT log or clear the timer, just go back
+            window.location.href = 'index.html';
+        });
+    </script>
 </body>
 </html>

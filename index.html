@@ -2,51 +2,334 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="icon-200.png" type="image/x-icon">
+    <title>Work Timer</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #121212;
+            color: #eee;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
 
-  <link rel="icon" type="image/x-icon" href="index-96.png">
-  <title>Work Session Tracker</title>
-  <link rel="stylesheet" href="styles.css">
-  <!-- Add Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        .container-box {
+            background: #333;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 1.5px 6px rgba(0, 0, 0, 0.08);
+            padding: 32px 40px;
+            min-width: 320px;
+            max-width: 100vw;
+        }
+
+        .timer {
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            padding: 10px 16px;
+            color: #eee;
+            font-size: 3rem;
+            /* Make it bigger */
+            font-weight: bold;
+            text-align: center;
+            margin: 24px 0;
+            letter-spacing: 2px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #eee;
+            font-size: 16px;
+        }
+
+        #start-btn {
+            background-color: #43a047;
+        }
+
+        #stop-btn {
+            background-color: #e53935;
+        }
+
+        #start-btn:hover {
+            background-color: #2e7d32;
+        }
+
+        #stop-btn:hover {
+            background-color: #c62828;
+        }
+
+        canvas {
+            margin: 20px 0;
+        }
+
+        .log-button {
+            text-align: center;
+        }
+
+        .log-button button {
+            background-color: #db671a;
+        }
+
+        .log-button button:hover {
+            background-color: #7d5d2e;
+        }
+
+        .work-time-today-box {
+            text-align: center;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            padding: 10px 16px;
+            margin: 18px 0;
+            display: inline-block;
+        }
+
+        #total-today {
+            padding: 2px 8px;
+            margin-left: 8px;
+        }
+
+        #work-chart {
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            padding: 10px 16px;
+            width: 100%;
+            height: 400px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 90%;
+            }
+
+            .timer {
+                font-size: 2rem;
+            }
+        }
+
+    </style>
 </head>
 
 <body>
+    <div class="container-box">
+        <div class="container">
+            <!-- <h1>Work Timer</h1> -->
 
+            <div class="timer">
+                <span id="timer-display">00:00:00</span>
+                <div>
+                    <button id="start-btn">Start</button>
+                    <button id="stop-btn">Stop</button>
+                </div>
+            </div>
 
-  <div id="today-summary" class="summary-container">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin: 18px 0;">
+                <div class="work-time-today-box" style="margin: 0;">
+                    <h3 style="margin:0;">Total hours worked today: <span id="total-today">00:00:00</span></h3>
+                </div>
+                <div class="log-button" style="margin: 0;">
+                    <button id="log-btn">View Log</button>
+                </div>
+            </div>
 
-    <div class="container">
-      <!-- <h1>Work Session Tracker</h1> -->
-      <div class="timer">
-        <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
-      </div>
-      <div class="buttons">
-        <button id="startBtn">Start</button>
-        <button id="stopBtn">Stop</button>
-        <button id="logBtn" onclick="window.open('log.html', '_blank')">Log</button>
-      </div>
-      <!-- Remove or keep the log section below as you wish, but to hide it: -->
-      <div class="log" style="display: none;">
-        <h2>Work Log</h2>
-        <ul id="logList"></ul>
-      </div>
+            <canvas id="work-chart"></canvas>
+
+            </div>
+        </div>
     </div>
 
-    <h3>Today's Total Work Time</h3>
-    <div id="today-total">00:00:00</div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // DOM Elements
+        const timerDisplay = document.getElementById('timer-display');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const totalTodayDisplay = document.getElementById('total-today');
+        const logBtn = document.getElementById('log-btn');
 
-    <!-- Weekly Chart Section -->
-    <div class="weekly-chart-container">
-      <!-- <h2>This Week's Work Hours</h2> -->
-      <canvas id="weeklyChart" width="400" height="200"></canvas>
-    </div>
+        let timerInterval = null;
+        let startTime = null;
+        let totalWorkToday = 0;
 
+        // Initialize Local Storage
+        const initializeStorage = () => {
+            const data = JSON.parse(localStorage.getItem('workData')) || {};
+            if (!data.sessions) {
+                data.sessions = [];
+                localStorage.setItem('workData', JSON.stringify(data));
+            }
+        };
 
+        const updateTotalToday = () => {
+            const today = new Date().toISOString().split('T')[0];
+            const data = JSON.parse(localStorage.getItem('workData'));
+            totalWorkToday = data.sessions
+                .filter(s => s.date === today)
+                .reduce((sum, session) => sum + session.length, 0);
+            totalTodayDisplay.textContent = formatTime(totalWorkToday);
+        };
 
-    <script src="script.js"></script>
+        const logSession = (endTime) => {
+            const data = JSON.parse(localStorage.getItem('workData'));
+            const start = startTime;
+            const end = endTime;
+            const sessionLength = Math.floor((end - start) / 1000);
+            const today = new Date(start).toISOString().split('T')[0];
+            data.sessions.push({ date: today, start, end, length: sessionLength });
+            localStorage.setItem('workData', JSON.stringify(data));
+            updateTotalToday();
+            updateChart();
+        };
 
+        const startTimer = () => {
+            if (timerInterval) return;
+
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                timerDisplay.textContent = formatTime(elapsed);
+            }, 1000);
+        };
+
+        const stopTimer = () => {
+            if (!timerInterval) return;
+
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerDisplay.textContent = '00:00:00';
+
+            logSession(Date.now());
+            localStorage.removeItem('activeTimer'); // <-- Add this line
+        };
+
+        const formatTime = (seconds) => {
+            const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(seconds % 60).padStart(2, '0');
+            return `${hrs}:${mins}:${secs}`;
+        };
+
+        const updateChart = () => {
+            const data = JSON.parse(localStorage.getItem('workData'));
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const pastWeek = Array.from({ length: 7 }, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = monthNames[date.getMonth()];
+                return { 
+                    label: `${day} ${month}`,
+                    iso: date.toISOString().split('T')[0]
+                };
+            }).reverse();
+
+            // Convert seconds to hours with one decimal
+            const workData = pastWeek.map(obj =>
+                Number((
+                    data.sessions
+                        .filter(session => session.date === obj.iso)
+                        .reduce((sum, session) => sum + session.length, 0) / 3600
+                ).toFixed(1))
+            );
+
+            chart.data.labels = pastWeek.map(obj => obj.label);
+            chart.data.datasets[0].data = workData;
+            chart.update();
+        };
+
+        const ctx = document.getElementById('work-chart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Work Time (hours)',
+                    data: [],
+                    backgroundColor: '#1e88e5',
+                    borderColor: '#1565c0',
+                    borderWidth: 1,
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `${context.parsed.y} hour${context.parsed.y === 1 ? '' : 's'}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Initialize
+        initializeStorage();
+        updateTotalToday();
+        updateChart();
+
+        // Resume timer if activeTimer exists in localStorage
+        const activeTimer = JSON.parse(localStorage.getItem('activeTimer'));
+        if (activeTimer && activeTimer.running && activeTimer.startTime) {
+            startTime = activeTimer.startTime;
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                timerDisplay.textContent = formatTime(elapsed);
+            }, 1000);
+        }
+
+        // Event Listeners
+        startBtn.addEventListener('click', startTimer);
+        stopBtn.addEventListener('click', stopTimer);
+        logBtn.addEventListener('click', () => {
+    // Save timer state before navigating
+    if (timerInterval && startTime) {
+        localStorage.setItem('activeTimer', JSON.stringify({
+            running: true,
+            startTime: startTime,
+            lastUpdate: Date.now()
+        }));
+    } else {
+        localStorage.removeItem('activeTimer');
+    }
+    window.location.href = 'log.html';
+});
+
+window.addEventListener('beforeunload', () => {
+    // Only save timer state, do not log session
+    if (timerInterval && startTime) {
+        localStorage.setItem('activeTimer', JSON.stringify({
+            running: true,
+            startTime: startTime,
+            lastUpdate: Date.now()
+        }));
+    } else {
+        localStorage.removeItem('activeTimer');
+    }
+});
+    </script>
 </body>
 
 </html>
