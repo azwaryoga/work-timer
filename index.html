@@ -120,6 +120,15 @@
             }
         }
 
+        /* Hide scrollbar for all browsers */
+        html, body {
+            overflow: hidden;
+            scrollbar-width: none;      /* Firefox */
+            -ms-overflow-style: none;   /* IE and Edge */
+        }
+        html::-webkit-scrollbar, body::-webkit-scrollbar {
+            display: none;              /* Chrome, Safari, Opera */
+        }
     </style>
 </head>
 
@@ -147,7 +156,6 @@
 
             <canvas id="work-chart"></canvas>
 
-            </div>
         </div>
     </div>
 
@@ -230,7 +238,7 @@
                 date.setDate(date.getDate() - i);
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = monthNames[date.getMonth()];
-                return { 
+                return {
                     label: `${day} ${month}`,
                     iso: date.toISOString().split('T')[0]
                 };
