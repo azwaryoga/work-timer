@@ -187,7 +187,7 @@
             const start = startTime;
             const end = endTime;
             const sessionLength = Math.floor((end - start) / 1000);
-            const today = new Date(start).toISOString().split('T')[0];
+            const today = new Date(start).toLocaleDateString('en-CA'); // Use local date
             data.sessions.push({ date: today, start, end, length: sessionLength });
             localStorage.setItem('workData', JSON.stringify(data));
             updateTotalToday();
