@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="icon-200.png" type="image/x-icon">
     <title>Work Timer</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -21,6 +22,7 @@
         }
 
         .container-box {
+            position: relative;
             background: #333;
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 1.5px 6px rgba(0, 0, 0, 0.08);
@@ -112,7 +114,8 @@
 
         @media (max-width: 600px) {
             .container {
-                width: 90%;
+                max-width: 90vw;
+                margin: 0 auto;
             }
 
             .timer {
@@ -121,29 +124,114 @@
         }
 
         /* Hide scrollbar for all browsers */
-        html, body {
+        html,
+        body {
             overflow: hidden;
-            scrollbar-width: none;      /* Firefox */
-            -ms-overflow-style: none;   /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE and Edge */
         }
-        html::-webkit-scrollbar, body::-webkit-scrollbar {
-            display: none;              /* Chrome, Safari, Opera */
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
+            /* Chrome, Safari, Opera */
+        }
+
+        /* Theme styles */
+        body.light {
+            background: #f5f5f5 !important;
+            color: #222 !important;
+        }
+
+        body.light .container-box,
+        body.light .filter-area,
+        body.light .work-time-today-box,
+        body.light .timer,
+        body.light #work-chart,
+        body.light #floating-timer {
+            background: #fff !important;
+            color: #222 !important;
+            border-color: #bbb !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 1.5px 6px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        body.light button,
+        body.light .icon-btn {
+            color: #222 !important;
+        }
+
+        body.light #start-btn {
+            background: #81c784 !important;
+        }
+
+        body.light #stop-btn {
+            background: #e57373 !important;
+        }
+
+        body.light #start-btn:hover {
+            background: #388e3c !important;
+            color: #fff !important;
+        }
+
+        body.light #stop-btn:hover {
+            background: #b71c1c !important;
+            color: #fff !important;
+        }
+
+        body.light .log-button button {
+            background: #ffb74d !important;
+            color: #222 !important;
+        }
+
+        body.light .log-button button:hover {
+            background: #ff9800 !important;
+            color: #fff !important;
+        }
+
+        body.light th {
+            background: #ffb74d !important;
+            color: #222 !important;
+        }
+
+        body.light tr:nth-child(even) {
+            background: #f0f0f0 !important;
+        }
+
+        body.light .icon-btn.download {
+            color: #1976d2 !important;
+        }
+
+        body.light .icon-btn.clear {
+            color: #b71c1c !important;
+        }
+
+        body.light .icon-btn.back {
+            color: #43a047 !important;
+        }
+
+        body.light #floating-timer {
+            border-color: #ffb74d !important;
         }
     </style>
 </head>
 
 <body>
+
     <div class="container-box">
         <div class="container">
+
+            <!-- Theme toggle button INSIDE container -->
+            <button id="theme-toggle" class="icon-btn theme-toggle"
+                style="position: absolute; top: 10px; right: 35px; background: none; border: none; cursor: pointer;">
+                <span class="material-icons" id="theme-icon">dark_mode</span>
+            </button>
+
             <!-- <h1>Work Timer</h1> -->
 
-            <div class="timer">
-                <span id="timer-display">00:00:00</span>
-                <div>
-                    <button id="start-btn">Start</button>
-                    <button id="stop-btn">Stop</button>
-                </div>
-            </div>
+            <canvas id="work-chart"></canvas>
+
 
             <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin: 18px 0;">
                 <div class="work-time-today-box" style="margin: 0;">
@@ -154,7 +242,13 @@
                 </div>
             </div>
 
-            <canvas id="work-chart"></canvas>
+            <div class="timer">
+                <span id="timer-display">00:00:00</span>
+                <div>
+                    <button id="start-btn">Start</button>
+                    <button id="stop-btn">Stop</button>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -308,35 +402,61 @@
             }, 1000);
         }
 
+        // Theme toggle logic
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+
+        // Set theme from localStorage or default to dark
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light');
+                themeIcon.textContent = 'dark_mode';
+            } else {
+                document.body.classList.remove('light');
+                themeIcon.textContent = 'light_mode';
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // On load, set theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+
+        // Toggle theme on button click
+        themeToggle.addEventListener('click', () => {
+            const isLight = document.body.classList.contains('light');
+            setTheme(isLight ? 'dark' : 'light');
+        });
+
         // Event Listeners
         startBtn.addEventListener('click', startTimer);
         stopBtn.addEventListener('click', stopTimer);
         logBtn.addEventListener('click', () => {
-    // Save timer state before navigating
-    if (timerInterval && startTime) {
-        localStorage.setItem('activeTimer', JSON.stringify({
-            running: true,
-            startTime: startTime,
-            lastUpdate: Date.now()
-        }));
-    } else {
-        localStorage.removeItem('activeTimer');
-    }
-    window.location.href = 'log.html';
-});
+            // Save timer state before navigating
+            if (timerInterval && startTime) {
+                localStorage.setItem('activeTimer', JSON.stringify({
+                    running: true,
+                    startTime: startTime,
+                    lastUpdate: Date.now()
+                }));
+            } else {
+                localStorage.removeItem('activeTimer');
+            }
+            window.location.href = 'log.html';
+        });
 
-window.addEventListener('beforeunload', () => {
-    // Only save timer state, do not log session
-    if (timerInterval && startTime) {
-        localStorage.setItem('activeTimer', JSON.stringify({
-            running: true,
-            startTime: startTime,
-            lastUpdate: Date.now()
-        }));
-    } else {
-        localStorage.removeItem('activeTimer');
-    }
-});
+        window.addEventListener('beforeunload', () => {
+            // Only save timer state, do not log session
+            if (timerInterval && startTime) {
+                localStorage.setItem('activeTimer', JSON.stringify({
+                    running: true,
+                    startTime: startTime,
+                    lastUpdate: Date.now()
+                }));
+            } else {
+                localStorage.removeItem('activeTimer');
+            }
+        });
     </script>
 </body>
 
